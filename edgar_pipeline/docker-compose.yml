@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  pipeline:
+    build: .
+    env_file:
+      - .env
+    command: python -m app.main
