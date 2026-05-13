@@ -3,8 +3,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-    database_url: str
-    sec_user_agent: str
+    database_url: str = "sqlite+pysqlite:///:memory:"
+    sec_user_agent: str = "edgar-ownership-etl/test"
     sec_requests_per_second: int = 5
     sec_force_high_rate_limit: bool = False
     watchlist_tickers: str = ""
