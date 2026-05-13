@@ -18,22 +18,23 @@ from edgar_ownership_etl.db.models import (
 )
 
 
+def _dedupe_items(items: list[dict], key_fields: tuple[str, ...]) -> list[dict]:
+    seen = set()
+    out = []
+    for item in items:
+        key = tuple(item.get(k) for k in key_fields)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+    return out
+
+
 def load_ownership_filing(session, filing, document_name: str, document_url: str, content_type: str | None, raw_text: str, parsed: dict) -> int:
     rows = 0
     sf = session.scalar(select(SourceFiling).where(SourceFiling.accession_number == filing.accession_number))
     if not sf:
-        sf = SourceFiling(
-            accession_number=filing.accession_number,
-            cik=filing.cik,
-            form_type=filing.form_type,
-            filing_date=filing.filing_date,
-            report_date=filing.report_date,
-            acceptance_datetime=filing.acceptance_datetime,
-            filing_detail_url=filing.filing_detail_url,
-            archive_base_url=filing.archive_base_url,
-            is_amendment=filing.is_amendment,
-            parse_status="parsed",
-        )
+        sf = SourceFiling(accession_number=filing.accession_number, cik=filing.cik, form_type=filing.form_type, filing_date=filing.filing_date, report_date=filing.report_date, acceptance_datetime=filing.acceptance_datetime, filing_detail_url=filing.filing_detail_url, archive_base_url=filing.archive_base_url, is_amendment=filing.is_amendment, parse_status="parsed")
         session.add(sf)
         session.flush()
         rows += 1
@@ -51,7 +52,7 @@ def load_ownership_filing(session, filing, document_name: str, document_url: str
         session.flush()
         rows += 1
 
-    for owner in parsed.get("reporting_owners", []):
+    for owner in _dedupe_items(parsed.get("reporting_owners", []), ("rpt_owner_cik", "owner_name")):
         ro = session.scalar(select(ReportingOwner).where(ReportingOwner.rpt_owner_cik == owner["rpt_owner_cik"], ReportingOwner.owner_name == owner["owner_name"]))
         if not ro:
             ro = ReportingOwner(**owner)
@@ -65,23 +66,28 @@ def load_ownership_filing(session, filing, document_name: str, document_url: str
 
     def add_unique(model, items):
         nonlocal rows
-        for item in items:
-            exists = session.scalar(select(model).where(model.ownership_submission_id == sub.id, model.source_row_hash == item["source_row_hash"]))
-            if not exists:
-                session.add(model(ownership_submission_id=sub.id, **item))
-                rows += 1
+        deduped = _dedupe_items(items, ("source_row_hash",))
+        hashes = [x["source_row_hash"] for x in deduped if x.get("source_row_hash")]
+        existing = set(session.scalars(select(model.source_row_hash).where(model.ownership_submission_id == sub.id, model.source_row_hash.in_(hashes))).all()) if hashes else set()
+        for item in deduped:
+            h = item.get("source_row_hash")
+            if h in existing:
+                continue
+            session.add(model(ownership_submission_id=sub.id, **item))
+            existing.add(h)
+            rows += 1
 
     add_unique(NonDerivativeTransaction, parsed.get("non_derivative_transactions", []))
     add_unique(DerivativeTransaction, parsed.get("derivative_transactions", []))
     add_unique(NonDerivativeHolding, parsed.get("non_derivative_holdings", []))
     add_unique(DerivativeHolding, parsed.get("derivative_holdings", []))
 
-    for footnote in parsed.get("footnotes", []):
+    for footnote in _dedupe_items(parsed.get("footnotes", []), ("footnote_id",)):
         exists = session.scalar(select(OwnershipFootnote).where(OwnershipFootnote.ownership_submission_id == sub.id, OwnershipFootnote.footnote_id == footnote["footnote_id"]))
         if not exists:
             session.add(OwnershipFootnote(ownership_submission_id=sub.id, **footnote))
             rows += 1
-    for sig in parsed.get("signatures", []):
+    for sig in _dedupe_items(parsed.get("signatures", []), ("signature_name", "signature_date")):
         exists = session.scalar(select(OwnerSignature).where(OwnerSignature.ownership_submission_id == sub.id, OwnerSignature.signature_name == sig["signature_name"], OwnerSignature.signature_date == sig["signature_date"]))
         if not exists:
             session.add(OwnerSignature(ownership_submission_id=sub.id, **sig))
