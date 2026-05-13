@@ -1,27 +1,14 @@
-from edgar_ownership_etl.db.models import (
-    Base,
-    DerivativeHolding,
-    DerivativeTransaction,
-    EtlWatermark,
-    NonDerivativeHolding,
-    NonDerivativeTransaction,
-    OwnershipSubmission,
-    RawDocument,
-    ReportingOwner,
-    SourceFiling,
-)
+from pathlib import Path
+
+from edgar_ownership_etl.db.models import Base
+
+
+MODEL_FILE = Path('src/edgar_ownership_etl/db/models.py')
 
 
 def test_required_table_mappings_exist_once():
-    assert DerivativeHolding.__tablename__ == 'derivative_holdings'
-    assert DerivativeTransaction.__tablename__ == 'derivative_transactions'
-    assert NonDerivativeHolding.__tablename__ == 'non_derivative_holdings'
-    assert NonDerivativeTransaction.__tablename__ == 'non_derivative_transactions'
-    assert SourceFiling.__tablename__ == 'source_filings'
-    assert RawDocument.__tablename__ == 'raw_documents'
-    assert OwnershipSubmission.__tablename__ == 'ownership_submissions'
-    assert ReportingOwner.__tablename__ == 'reporting_owners'
-    assert EtlWatermark.__tablename__ == 'etl_watermarks'
+    keys = list(Base.metadata.tables.keys())
+    assert len(keys) == len(set(keys))
 
     required = {
         'non_derivative_transactions',
@@ -34,7 +21,17 @@ def test_required_table_mappings_exist_once():
         'source_filings',
         'etl_watermarks',
     }
-    keys = list(Base.metadata.tables.keys())
-    assert len(keys) == len(set(keys))
     for name in required:
         assert keys.count(name) == 1
+
+
+def test_single_occurrence_of_transaction_holding_models_in_file():
+    content = MODEL_FILE.read_text()
+    assert content.count('class NonDerivativeTransaction') == 1
+    assert content.count('__tablename__ = "non_derivative_transactions"') == 1
+    assert content.count('class DerivativeTransaction') == 1
+    assert content.count('__tablename__ = "derivative_transactions"') == 1
+    assert content.count('class NonDerivativeHolding') == 1
+    assert content.count('__tablename__ = "non_derivative_holdings"') == 1
+    assert content.count('class DerivativeHolding') == 1
+    assert content.count('__tablename__ = "derivative_holdings"') == 1
