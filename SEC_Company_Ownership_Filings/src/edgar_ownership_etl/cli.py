@@ -12,6 +12,24 @@ from edgar_ownership_etl.sec.client import SecClient
 app = typer.Typer()
 
 
+def _dedupe_issuer_rows(payload: dict) -> dict[str, dict]:
+    grouped: dict[str, dict] = {}
+    for row in payload.values():
+        cik = normalize_cik(str(row["cik_str"]))
+        ticker = (row.get("ticker", "") or "").upper()
+        name = row.get("title", "")
+        if cik not in grouped:
+            grouped[cik] = {"cik": cik, "ticker": ticker or None, "name": name}
+            continue
+        current = grouped[cik]
+        current_ticker = current.get("ticker") or ""
+        if ticker and (not current_ticker or ticker < current_ticker):
+            current["ticker"] = ticker
+        if not current.get("name") and name:
+            current["name"] = name
+    return grouped
+
+
 @app.command("init-db")
 def init_db() -> None:
     command.upgrade(Config("alembic.ini"), "head")
@@ -26,11 +44,12 @@ def sync_cik_map() -> None:
     payload = client.get("https://www.sec.gov/files/company_tickers.json").json()
     inserted = 0
     updated = 0
+    deduped = _dedupe_issuer_rows(payload)
     with SessionLocal() as session:
-        for row in payload.values():
-            cik = normalize_cik(str(row["cik_str"]))
-            ticker = row.get("ticker", "").upper() or None
-            name = row.get("title", "")
+        for row in deduped.values():
+            cik = row["cik"]
+            ticker = row["ticker"]
+            name = row["name"]
             existing = session.scalar(select(Issuer).where(Issuer.cik == cik))
             if existing:
                 existing.ticker = ticker
