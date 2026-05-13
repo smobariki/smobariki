@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
+
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -92,6 +93,100 @@ class NonDerivativeTransaction(Base):
     nature_of_ownership: Mapped[str | None] = mapped_column(String)
     source_row_hash: Mapped[str] = mapped_column(String)
 
+class DerivativeHolding(Base):
+    __tablename__ = "derivative_holdings"
+    __table_args__ = (UniqueConstraint("ownership_submission_id", "source_row_hash"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
+    security_title: Mapped[str | None] = mapped_column(String)
+    equity_swap_involved: Mapped[str | None] = mapped_column(String)
+    transaction_acquired_disposed_code: Mapped[str | None] = mapped_column(String)
+    shares_owned_following_transaction: Mapped[float | None] = mapped_column(Numeric)
+    direct_or_indirect_ownership: Mapped[str | None] = mapped_column(String)
+    nature_of_ownership: Mapped[str | None] = mapped_column(String)
+    source_row_hash: Mapped[str] = mapped_column(String)
+
+class DerivativeTransaction(Base):
+    __tablename__ = "derivative_transactions"
+    __table_args__ = (UniqueConstraint("ownership_submission_id", "source_row_hash"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
+    transaction_date: Mapped[date | None] = mapped_column(Date)
+    transaction_code: Mapped[str | None] = mapped_column(String)
+    source_row_hash: Mapped[str] = mapped_column(String)
+
+
+class NonDerivativeHolding(Base):
+    __tablename__ = "non_derivative_holdings"
+    __table_args__ = (UniqueConstraint("ownership_submission_id", "source_row_hash"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
+    security_title: Mapped[str | None] = mapped_column(String)
+    source_row_hash: Mapped[str] = mapped_column(String)
+
+class DerivativeHolding(Base):
+    __tablename__ = "derivative_holdings"
+    __table_args__ = (UniqueConstraint("ownership_submission_id", "source_row_hash"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
+    security_title: Mapped[str | None] = mapped_column(String)
+    source_row_hash: Mapped[str] = mapped_column(String)
+
+
+class OwnershipFootnote(Base):
+    __tablename__ = "ownership_footnotes"
+    __table_args__ = (UniqueConstraint("ownership_submission_id", "footnote_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
+    footnote_id: Mapped[str] = mapped_column(String)
+    footnote_text: Mapped[str] = mapped_column(Text)
+
+
+class OwnerSignature(Base):
+    __tablename__ = "owner_signatures"
+    __table_args__ = (UniqueConstraint("ownership_submission_id", "signature_name", "signature_date"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
+    signature_name: Mapped[str] = mapped_column(String)
+    signature_date: Mapped[date | None] = mapped_column(Date)
+
+
+class OwnershipFootnote(Base):
+    __tablename__ = "ownership_footnotes"
+    __table_args__ = (UniqueConstraint("ownership_submission_id", "footnote_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
+    footnote_id: Mapped[str] = mapped_column(String)
+    footnote_text: Mapped[str] = mapped_column(Text)
+
+
+class OwnerSignature(Base):
+    __tablename__ = "owner_signatures"
+    __table_args__ = (UniqueConstraint("ownership_submission_id", "signature_name", "signature_date"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
+    signature_name: Mapped[str] = mapped_column(String)
+    signature_date: Mapped[date | None] = mapped_column(Date)
+
+
+class OwnershipFootnote(Base):
+    __tablename__ = "ownership_footnotes"
+    __table_args__ = (UniqueConstraint("ownership_submission_id", "footnote_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
+    footnote_id: Mapped[str] = mapped_column(String)
+    footnote_text: Mapped[str] = mapped_column(Text)
+
+
+class OwnerSignature(Base):
+    __tablename__ = "owner_signatures"
+    __table_args__ = (UniqueConstraint("ownership_submission_id", "signature_name", "signature_date"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
+    signature_name: Mapped[str] = mapped_column(String)
+    signature_date: Mapped[date | None] = mapped_column(Date)
+
+
 class DerivativeTransaction(Base):
     __tablename__ = "derivative_transactions"
     __table_args__ = (UniqueConstraint("ownership_submission_id", "source_row_hash"),)
@@ -112,43 +207,8 @@ class NonDerivativeHolding(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
     security_title: Mapped[str | None] = mapped_column(String)
-    equity_swap_involved: Mapped[str | None] = mapped_column(String)
-    transaction_acquired_disposed_code: Mapped[str | None] = mapped_column(String)
-    shares_owned_following_transaction: Mapped[float | None] = mapped_column(Numeric)
-    direct_or_indirect_ownership: Mapped[str | None] = mapped_column(String)
-    nature_of_ownership: Mapped[str | None] = mapped_column(String)
     source_row_hash: Mapped[str] = mapped_column(String)
 
-class DerivativeHolding(Base):
-    __tablename__ = "derivative_holdings"
-    __table_args__ = (UniqueConstraint("ownership_submission_id", "source_row_hash"),)
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
-    security_title: Mapped[str | None] = mapped_column(String)
-    equity_swap_involved: Mapped[str | None] = mapped_column(String)
-    transaction_acquired_disposed_code: Mapped[str | None] = mapped_column(String)
-    shares_owned_following_transaction: Mapped[float | None] = mapped_column(Numeric)
-    direct_or_indirect_ownership: Mapped[str | None] = mapped_column(String)
-    nature_of_ownership: Mapped[str | None] = mapped_column(String)
-    source_row_hash: Mapped[str] = mapped_column(String)
-
-class DerivativeTransaction(Base):
-    __tablename__ = "derivative_transactions"
-    __table_args__ = (UniqueConstraint("ownership_submission_id", "source_row_hash"),)
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
-    transaction_date: Mapped[date | None] = mapped_column(Date)
-    transaction_code: Mapped[str | None] = mapped_column(String)
-    source_row_hash: Mapped[str] = mapped_column(String)
-
-
-class NonDerivativeHolding(Base):
-    __tablename__ = "non_derivative_holdings"
-    __table_args__ = (UniqueConstraint("ownership_submission_id", "source_row_hash"),)
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
-    security_title: Mapped[str | None] = mapped_column(String)
-    source_row_hash: Mapped[str] = mapped_column(String)
 
 class DerivativeHolding(Base):
     __tablename__ = "derivative_holdings"
@@ -157,42 +217,6 @@ class DerivativeHolding(Base):
     ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
     security_title: Mapped[str | None] = mapped_column(String)
     source_row_hash: Mapped[str] = mapped_column(String)
-
-
-class OwnershipFootnote(Base):
-    __tablename__ = "ownership_footnotes"
-    __table_args__ = (UniqueConstraint("ownership_submission_id", "footnote_id"),)
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
-    footnote_id: Mapped[str] = mapped_column(String)
-    footnote_text: Mapped[str] = mapped_column(Text)
-
-
-class OwnerSignature(Base):
-    __tablename__ = "owner_signatures"
-    __table_args__ = (UniqueConstraint("ownership_submission_id", "signature_name", "signature_date"),)
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
-    signature_name: Mapped[str] = mapped_column(String)
-    signature_date: Mapped[date | None] = mapped_column(Date)
-
-
-class OwnershipFootnote(Base):
-    __tablename__ = "ownership_footnotes"
-    __table_args__ = (UniqueConstraint("ownership_submission_id", "footnote_id"),)
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
-    footnote_id: Mapped[str] = mapped_column(String)
-    footnote_text: Mapped[str] = mapped_column(Text)
-
-
-class OwnerSignature(Base):
-    __tablename__ = "owner_signatures"
-    __table_args__ = (UniqueConstraint("ownership_submission_id", "signature_name", "signature_date"),)
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
-    signature_name: Mapped[str] = mapped_column(String)
-    signature_date: Mapped[date | None] = mapped_column(Date)
 
 
 class OwnershipFootnote(Base):
