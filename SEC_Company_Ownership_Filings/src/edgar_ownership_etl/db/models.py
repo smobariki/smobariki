@@ -195,6 +195,24 @@ class OwnerSignature(Base):
     signature_date: Mapped[date | None] = mapped_column(Date)
 
 
+class OwnershipFootnote(Base):
+    __tablename__ = "ownership_footnotes"
+    __table_args__ = (UniqueConstraint("ownership_submission_id", "footnote_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
+    footnote_id: Mapped[str] = mapped_column(String)
+    footnote_text: Mapped[str] = mapped_column(Text)
+
+
+class OwnerSignature(Base):
+    __tablename__ = "owner_signatures"
+    __table_args__ = (UniqueConstraint("ownership_submission_id", "signature_name", "signature_date"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ownership_submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ownership_submissions.id"))
+    signature_name: Mapped[str] = mapped_column(String)
+    signature_date: Mapped[date | None] = mapped_column(Date)
+
+
 class EtlWatermark(Base):
     __tablename__ = "etl_watermarks"
     __table_args__ = (UniqueConstraint("scope", "scope_value"),)
