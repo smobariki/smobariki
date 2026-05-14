@@ -76,6 +76,11 @@ class ReportingOwner(Base):
     rpt_owner_cik: Mapped[str | None] = mapped_column(String, index=True)
     owner_name: Mapped[str] = mapped_column(String, index=True)
     is_director: Mapped[bool | None] = mapped_column(Boolean)
+    is_officer: Mapped[bool | None] = mapped_column(Boolean)
+    officer_title: Mapped[str | None] = mapped_column(String)
+    is_ten_percent_owner: Mapped[bool | None] = mapped_column(Boolean)
+    is_other: Mapped[bool | None] = mapped_column(Boolean)
+    other_text: Mapped[str | None] = mapped_column(String)
 
 
 class OwnershipSubmissionReportingOwner(Base):

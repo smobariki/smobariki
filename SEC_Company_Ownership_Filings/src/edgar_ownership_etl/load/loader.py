@@ -59,6 +59,11 @@ def load_ownership_filing(session, filing, document_name: str, document_url: str
             session.add(ro)
             session.flush()
             rows += 1
+        else:
+            for field in ["is_director", "is_officer", "officer_title", "is_ten_percent_owner", "is_other", "other_text"]:
+                val = owner.get(field)
+                if val is not None:
+                    setattr(ro, field, val)
         link = session.scalar(select(OwnershipSubmissionReportingOwner).where(OwnershipSubmissionReportingOwner.ownership_submission_id == sub.id, OwnershipSubmissionReportingOwner.reporting_owner_id == ro.id))
         if not link:
             session.add(OwnershipSubmissionReportingOwner(ownership_submission_id=sub.id, reporting_owner_id=ro.id))

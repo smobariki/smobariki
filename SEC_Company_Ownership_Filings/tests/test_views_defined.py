@@ -30,3 +30,9 @@ def test_fact_ownership_transactions_columns_declared():
         'transaction_code',
     ]:
         assert col in content
+
+
+def test_dim_reporting_owner_columns_declared():
+    content = Path('alembic/versions/0001_initial.py').read_text()
+    for col in ['is_director','is_officer','officer_title','is_ten_percent_owner','is_other','other_text','relationship_summary']:
+        assert col in content

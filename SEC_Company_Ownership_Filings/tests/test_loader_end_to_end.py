@@ -25,7 +25,9 @@ def test_loader_inserts_and_is_idempotent():
         assert rows2 == 0
         assert s.scalar(select(func.count()).select_from(RawDocument)) == 1
         assert s.scalar(select(func.count()).select_from(OwnershipSubmission)) == 1
-        assert s.scalar(select(func.count()).select_from(ReportingOwner)) >= 0
+        owner = s.scalar(select(ReportingOwner))
+        if owner is not None:
+            assert owner.is_officer in {None, True, False}
         assert s.scalar(select(func.count()).select_from(NonDerivativeTransaction)) == 1
         tx = s.scalar(select(NonDerivativeTransaction))
         assert str(tx.transaction_shares) == '100.0000000000'

@@ -46,3 +46,9 @@ def test_migration_contains_equity_swap_columns():
     assert "create_table('non_derivative_holdings'" in content
     assert "create_table('derivative_holdings'" in content
     assert content.count("equity_swap_involved") >= 4
+
+
+def test_reporting_owner_relationship_columns_in_migration():
+    content = Path('alembic/versions/0001_initial.py').read_text()
+    for col in ['is_director','is_officer','officer_title','is_ten_percent_owner','is_other','other_text']:
+        assert col in content

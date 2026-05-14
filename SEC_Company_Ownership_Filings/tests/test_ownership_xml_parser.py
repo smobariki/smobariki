@@ -20,3 +20,15 @@ def test_missing_numeric_fields_remain_none():
     row = parsed['non_derivative_transactions'][0]
     assert row['transaction_shares'] is None
     assert row['transaction_price_per_share'] is None
+
+
+def test_parse_reporting_owner_relationship_fields():
+    xml = """<ownershipDocument><documentType>4</documentType><issuer><issuerCik>1</issuerCik></issuer><reportingOwner><reportingOwnerId><rptOwnerCik>2</rptOwnerCik><rptOwnerName>Jane</rptOwnerName></reportingOwnerId><reportingOwnerRelationship><isDirector>1</isDirector><isOfficer>true</isOfficer><officerTitle>Chief Financial Officer</officerTitle><isTenPercentOwner>0</isTenPercentOwner><isOther>1</isOther><otherText>Trustee</otherText></reportingOwnerRelationship></reportingOwner></ownershipDocument>"""
+    parsed = parse_ownership_xml(xml)
+    owner = parsed["reporting_owners"][0]
+    assert owner["is_director"] is True
+    assert owner["is_officer"] is True
+    assert owner["officer_title"] == "Chief Financial Officer"
+    assert owner["is_ten_percent_owner"] is False
+    assert owner["is_other"] is True
+    assert owner["other_text"] == "Trustee"

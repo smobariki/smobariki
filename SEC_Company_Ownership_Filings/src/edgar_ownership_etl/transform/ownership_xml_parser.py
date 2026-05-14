@@ -35,6 +35,13 @@ def _date_path(node, path: str):
     return date.fromisoformat(value) if value else None
 
 
+def _bool_path(node, path: str):
+    value = _text_path(node, path)
+    if value is None:
+        return None
+    return value.strip().lower() in {'1','true','y','yes'}
+
+
 def parse_ownership_xml(xml_text: str) -> dict:
     root = etree.fromstring(xml_text.encode())
     submission = {
@@ -55,7 +62,12 @@ def parse_ownership_xml(xml_text: str) -> dict:
         submission["reporting_owners"].append({
             "rpt_owner_cik": _text_path(owner, "reportingOwnerId/rptOwnerCik"),
             "owner_name": _text_path(owner, "reportingOwnerId/rptOwnerName") or "Unknown",
-            "is_director": (_text_path(owner, "reportingOwnerRelationship/isDirector") or "") in {"1", "true", "True"},
+            "is_director": _bool_path(owner, "reportingOwnerRelationship/isDirector"),
+            "is_officer": _bool_path(owner, "reportingOwnerRelationship/isOfficer"),
+            "officer_title": _text_path(owner, "reportingOwnerRelationship/officerTitle"),
+            "is_ten_percent_owner": _bool_path(owner, "reportingOwnerRelationship/isTenPercentOwner"),
+            "is_other": _bool_path(owner, "reportingOwnerRelationship/isOther"),
+            "other_text": _text_path(owner, "reportingOwnerRelationship/otherText"),
         })
 
     for idx, tx in enumerate(root.xpath("*[local-name()='nonDerivativeTable']/*[local-name()='nonDerivativeTransaction']")):
